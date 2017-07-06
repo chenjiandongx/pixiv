@@ -23,8 +23,10 @@ def get_cookies():
 cookies = get_cookies()
 result = set()
 lock = threading.Lock()     # 多线程全局资源锁
+total = 1
 
 def crawl(url):
+    global total
     req = requests.get(url, headers=headers, cookies=cookies).text
     bs = BeautifulSoup(req, 'lxml').find('ul', class_="_image-items autopagerize_page_element")
     for b in bs.find_all('li', class_="image-item"):
@@ -33,6 +35,8 @@ def crawl(url):
                 href = b.find('a', class_="work _work ")['href']
                 star = b.find('ul', class_="count-list").find('li').find('a').text
                 result.add(("https://www.pixiv.net" + href, int(star)))
+                print(total)
+                total += 1
         except:
             pass
 
@@ -43,7 +47,7 @@ def get_urls(search, page):
 
 
 if __name__ == "__main__":
-    urls = get_urls("summer", 100)
-    with futures.ThreadPoolExecutor(10) as executor:
+    urls = get_urls("summer", 500)
+    with futures.ThreadPoolExecutor(32) as executor:
         executor.map(crawl, urls)
     pprint(sorted(result, key=lambda v: v[1], reverse=True))    # 按star数降序排序

@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from pprint import pprint
 
 class Pixiv():
 
@@ -15,15 +16,16 @@ class Pixiv():
     @property
     def cookies(self):
         with open("cookies.txt", 'r') as f:
-            cookies = {}
+            _cookies = {}
             for row in f.read().split(';'):
                 k, v = row.strip().split('=', 1)
-                cookies[k] = v
-            return cookies
+                _cookies[k] = v
+            return _cookies
 
     def run(self):
         fmt = 'https://www.pixiv.net/search.php?word={}&order=date_d&p={}'
         urls = [fmt.format(self.search, p) for p in range(1, self.page)]
+        total = 1
         for url in urls:
             req = requests.get(url, headers=self.headers, cookies=self.cookies).text
             bs = BeautifulSoup(req, 'lxml').find('ul', class_="_image-items autopagerize_page_element")
@@ -32,10 +34,11 @@ class Pixiv():
                     href = b.find('a', class_="work _work ")['href']
                     star = b.find('ul', class_="count-list").find('li').find('a').text
                     self.result.add(("https://www.pixiv.net{}".format(href), int(star)))
-                    print("+1")
+                    print(total)
+                    total += 1
                 except:
                     pass
-        print(sorted(self.result, key=lambda v: v[1], reverse=True))    # 按star数降序排序
+        pprint(sorted(self.result, key=lambda v: v[1], reverse=True))    # 按star数降序排序
 
 if __name__ == "__main__":
     spider = Pixiv("winter", 100)
